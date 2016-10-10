@@ -69,6 +69,84 @@ WHERE MONTHS_BETWEEN('2016-06-14',w_stadku_od) >= 72
       
       
 --Zad7
+--Wyświetlić imiona, kwartalne przydziały myszy i kwartalne przydziały dodatkowe dla wszystkich kotów, 
+--u których przydział myszy jest większy od dwukrotnego przydziału dodatkowego ale nie mniejszy od 55.
+
+SELECT imie, NVL(przydzial_myszy,0)*3 "Myszy kwartalnie", NVL(myszy_extra,0)*3 "Kwartalne dodatki"
+FROM Kocury
+WHERE NVL(przydzial_myszy,0)>2*NVL(myszy_extra,0) AND NVL(przydzial_myszy,0)>=55;
+
+--Zad8
+--Wyświetlić dla każdego kota (imię) następujące informacje o całkowitym rocznym spożyciu myszy: 
+--wartość całkowitego spożycia jeśli przekracza 660, 
+--’Limit’ jeśli jest równe 660, ’Ponizej 660’ jeśli jest mniejsze od 660. 
+--Nie używać operatorów zbiorowych (UNION, INTERSECT, MINUS).
+
+SELECT imie,
+      CASE
+        WHEN (NVL(przydzial_myszy,0)+nvl(myszy_extra,0))*12 > 660 THEN TO_CHAR((NVL(przydzial_myszy,0)+nvl(myszy_extra,0))*12)
+        WHEN (NVL(przydzial_myszy,0)+nvl(myszy_extra,0))*12 = 660 THEN 'Limit'
+        ELSE 'Ponizej 660'
+      END
+      "Zjada rocznie"
+FROM Kocury
+ORDER BY imie;
+
+--Zad9
+--Po kilkumiesięcznym, spowodowanym kryzysem, zamrożeniu wydawania myszy Tygrys z dniem bieżącym wznowił wypłaty zgodnie z zasadą,
+--że koty, które przystąpiły do stada w pierwszej połowie miesiąca (łącznie z 15-m) 
+--otrzymują pierwszy po przerwie przydział myszy w ostatnią środę bieżącego miesiąca, natomiast koty, które przystąpiły do stada po 15-ym, 
+--pierwszy po przerwie przydział myszy otrzymują w ostatnią środę następnego miesiąca. 
+--W kolejnych miesiącach myszy wydawane są wszystkim kotom w ostatnią środę każdego miesiąca. 
+
+--Wyświetlić dla każdego kota jego pseudonim, datę przystąpienia do stada oraz datę pierwszego po przerwie przydziału myszy, 
+--przy założeniu, że  datą bieżącą jest 24 i 27 październik 2016.
+SELECT
+  pseudo,
+  w_stadku_od "W STADKU",
+  CASE EXTRACT(MONTH FROM NEXT_DAY('2015-11-24', 'ŚRODA'))
+    WHEN EXTRACT(MONTH FROM TO_DATE ('2015-11-24')) THEN
+      CASE
+        WHEN EXTRACT(DAY FROM w_stadku_od) <= 15 THEN
+          NEXT_DAY(LAST_DAY('2015-11-24')-7, 'ŚRODA')
+        ELSE
+          NEXT_DAY(LAST_DAY(ADD_MONTHS('2015-11-24', 1))-7, 'ŚRODA')
+      END
+    ELSE NEXT_DAY(LAST_DAY(ADD_MONTHS('2015-11-24', 1))-7, 'ŚRODA')
+  END "Wyplata"
+FROM Kocury;
+
+--Zad10
+--Atrybut pseudo w tabeli Kocury jest kluczem głównym tej tabeli. 
+--Sprawdzić, czy rzeczywiście wszystkie pseudonimy są wzajemnie różne. 
+--Zrobić to samo dla atrybutu szef.
+
+SELECT 
+      CASE COUNT (pseudo)
+        WHEN 1 THEN pseudo || '- Unikalny'
+        ELSE pseudo || ' - nieunikalny'
+      END
+      "Unikalnosc atr. PSEUDO"
+FROM Kocury
+GROUP BY pseudo
+ORDER BY pseudo ASC;
+
+
+SELECT 
+      CASE COUNT (szef)
+        WHEN 1 THEN szef || '- Unikalny'
+        ELSE szef || ' - nieunikalny'
+      END
+      "Unikalnosc atr. SZEF"
+FROM Kocury
+WHERE szef IS NOT NULL
+GROUP BY szef
+ORDER BY szef ASC;
+
+
+
+
+
 
 
 
