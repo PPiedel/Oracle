@@ -34,4 +34,41 @@ SELECT imie||' zwany '||pseudo||
 FROM Kocury
 ORDER BY w_stadku_od DESC, pseudo;
 
+--Zad5
+--Znaleźć pierwsze wystąpienie litery A i pierwsze wystąpienie litery L w każdym pseudonimie 
+--a następnie zamienić znalezione litery na odpowiednio # i %. Wykorzystać funkcje działające na łańcuchach. 
+--Brać pod uwagę tylko te imiona, w których występują obie litery.
+
+SELECT pseudo "Pseudo", REGEXP_REPLACE(
+                                        REGEXP_REPLACE(pseudo, 'A', '#', 1, 1),
+                                        'L',
+                                        '%',
+                                        1,
+                                        1
+                                      ) "Po wymianie A na # oraz L na %"
+FROM Kocury
+WHERE pseudo LIKE '%L%A%' OR pseudo LIKE '%A%L%';
+
+--Zad6
+--Wyświetlić imiona kotów z co najmniej siedmioletnim stażem (które dodatkowo przystępowały do stada od 1 marca do 30 września), 
+--daty ich przystąpienia do stada, początkowy przydział myszy (obecny przydział, ze względu na podwyżkę po pół roku członkostwa,  jest o 10% wyższy od początkowego) , 
+--datę wspomnianej podwyżki o 10% oraz aktualnym przydział myszy. 
+--Wykorzystać odpowiednie funkcje działające na datach. W poniższym rozwiązaniu datą bieżącą jest 14.06.2016
+
+--SOMETHING WRONG ???
+SELECT imie,
+      w_stadku_od "W stadku", 
+      ROUND(NVL(przydzial_myszy, 0)*0.9) "Zjadal", 
+      ADD_MONTHS(w_stadku_od,6) "Podwyzka",
+      NVL(przydzial_myszy, 0) "Zjada"
+FROM Kocury
+WHERE MONTHS_BETWEEN('2016-06-14',w_stadku_od) >= 72 
+      AND EXTRACT(MONTH FROM w_stadku_od) BETWEEN 3 AND 9 
+      AND EXTRACT(DAY FROM w_stadku_od)>=1
+      AND EXTRACT(DAY FROM w_stadku_od)<=30;
+      
+      
+--Zad7
+
+
 
