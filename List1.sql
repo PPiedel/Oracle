@@ -123,6 +123,7 @@ FROM Kocury;
 --Atrybut pseudo w tabeli Kocury jest kluczem g��wnym tej tabeli. 
 --Sprawdzi�, czy rzeczywi�cie wszystkie pseudonimy s� wzajemnie r�ne. 
 --Zrobi� to samo dla atrybutu szef.
+
 --pseudo nie moze by nullem wiec nie bedzie grupy z nullem
 --na pseudo nalozony jest indeks a to jest klucz i to bedzie najszybsze
 SELECT 
@@ -195,7 +196,36 @@ SELECT
   nr_bandy "Nr bandy"
 FROM Kocury
 WHERE plec = 'M'
-CONNECT BY PRIOR pseudo = szef
+CONNECT BY PRIOR pseudo = szef --stworz kolejny wiersz z takiego kocura, ktorego pole szef jest taki jak pseudo biezacego wiersza
 START WITH funkcja = 'BANDZIOR';
+
+
+--Zad15
+--Przedstawić informację o podległości kotów posiadających dodatkowy przydział myszy 
+--tak aby imię kota stojącego najwyżej w hierarchii było wyświetlone z najmniejszym wcięciem 
+--a pozostałe imiona z wcięciem odpowiednim do miejsca w hierarchii.
+SELECT
+  rpad(lpad((LEVEL-1), (LEVEL-1)*4+1, '===>'), 16)||
+  lpad(' ',4*(level-1)) || imie "Hierarchia", --domyslnie spacja
+  NVL(szef, 'Sam sobie panem') "Pseudo szefa",
+  funkcja "Funkcja"
+FROM Kocury
+WHERE myszy_extra > 0
+CONNECT BY PRIOR pseudo = szef --stworz kolejny wiersz z takiego kocura, ktorego pole szef jest taki jak pseudo biezacego wiersza
+START WITH szef IS NULL;
+
+
+--zad16
+--Wyświetlić określoną pseudonimami drogę służbową (przez wszystkich kolejnych przełożonych do głównego szefa) 
+--kotów płci męskiej o stażu dłuższym niż siedem lat (w poniższym rozwiązaniu datą bieżącą jest 14.06.2016)
+--nie posiadających dodatkowego przydziału myszy.
+SELECT
+  lpad(' ',3*(LEVEL-1)) ||
+  pseudo "Droga sluzbowa"
+FROM Kocury
+CONNECT BY PRIOR szef = pseudo
+START WITH
+  plec = 'M' AND MONTHS_BETWEEN(SYSDATE,w_stadku_od) >72 AND myszy_extra IS NULL ;
+
 
 
