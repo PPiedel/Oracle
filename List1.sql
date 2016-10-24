@@ -4,11 +4,6 @@
 SELECT imie_wroga "Wrog", opis_incydentu "Przewina"
 FROM Wrogowie_Kocurow
 WHERE EXTRACT(YEAR FROM data_incydentu)  = 2009; 
---ver2
-SELECT imie_wroga "Wrog", opis_incydentu "Przewina"
-FROM Wrogowie_Kocurow
-WHERE data_incydentu LIKE '2009%'; 
-
 
 --Zad2
 --Znajd� wszystkie kotki (p�e� �e�ska), kt�re przyst�pi�y do stada mi�dzy 1 wrze�nia 2005r. a 31 lipca 2007r.
@@ -106,15 +101,30 @@ ORDER BY imie;
 SELECT
   pseudo,
   w_stadku_od "W STADKU",
-  CASE EXTRACT(MONTH FROM NEXT_DAY('2015-11-24', 3))
-    WHEN EXTRACT(MONTH FROM TO_DATE ('2015-11-24')) THEN
+  CASE EXTRACT(MONTH FROM NEXT_DAY('2016-10-24', 3)) --jesli miesiac nastepnej srody
+    WHEN EXTRACT(MONTH FROM DATE '2016-10-24') THEN --jest taki sam jak obecny miesiac
       CASE
         WHEN EXTRACT(DAY FROM w_stadku_od) <= 15 THEN
-          NEXT_DAY(LAST_DAY('2015-11-24')-7, 3)
+          NEXT_DAY(LAST_DAY('2016-10-24')-7, 3) --ostatnia sroda w biezacym miesiacu
         ELSE
-          NEXT_DAY(LAST_DAY(ADD_MONTHS('2015-11-24', 1))-7, 3)
+          NEXT_DAY(LAST_DAY(ADD_MONTHS('2016-10-24', 1))-7, 3) --ostatnia sroda w nastepnym miesiacu
       END
-    ELSE NEXT_DAY(LAST_DAY(ADD_MONTHS('2015-11-24', 1))-7, 3)
+    ELSE NEXT_DAY(LAST_DAY(ADD_MONTHS('2016-10-24', 1))-7, 3) --jesli sie nie zalapal to w ostatnia srode kazdego miesiaca
+  END "Wyplata"
+FROM Kocury;
+
+SELECT
+  pseudo,
+  w_stadku_od "W STADKU",
+  CASE EXTRACT(MONTH FROM NEXT_DAY('2016-10-27', 3))
+    WHEN EXTRACT(MONTH FROM TO_DATE ('2016-10-27')) THEN
+      CASE
+        WHEN EXTRACT(DAY FROM w_stadku_od) <= 15 THEN
+          NEXT_DAY(LAST_DAY('2016-10-27')-7, 3)
+        ELSE
+          NEXT_DAY(LAST_DAY(ADD_MONTHS('2016-10-27', 1))-7, 3)
+      END
+    ELSE NEXT_DAY(LAST_DAY(ADD_MONTHS('2016-10-27', 1))-7, 3)
   END "Wyplata"
 FROM Kocury;
 
