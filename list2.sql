@@ -1,17 +1,16 @@
 --Zad17
---Wyświetlić pseudonimy, przydziały myszy oraz nazwy band dla kotów operujących na terenie POLE 
---posdających przydział myszy większy od 50.
---zględnić fakt, że są w stadzie koty posiadające prawo do polowań na całym „obsługiwanym” przez stado terenie.
+--Wywietlić pseudonimy, przydziały myszy oraz nazwy band dla kotów operujšcych na terenie POLE 
+--posdajšcych przydział myszy większy od 50.
+--zględnić fakt, że sš w stadzie koty posiadajšce prawo do polowań na całym obsługiwanym przez stado terenie.
 -- Nie stosować podzapytań.
-
 SELECT pseudo "Poluje w polu", przydzial_myszy "Przydzial myszy", nazwa "Banda"
 FROM  Kocury JOIN Bandy ON Kocury.nr_bandy = Bandy.nr_bandy
 WHERE przydzial_myszy > 50 AND teren = 'POLE' OR teren='CALOSC'
 ORDER BY przydzial_myszy DESC;
 
 --Zad18
---Wyświetlić bez stosowania podzapytania imiona i daty przystąpienia do stada kotów, 
---które przystąpiły do stada przed kotem o imieniu ’JACEK’. Wyniki uporządkować malejąco wg daty przystąpienia do stadka.
+--Wywietlić bez stosowania podzapytania imiona i daty przystšpienia do stada kotów, 
+--które przystšpiły do stada przed kotem o imieniu JACEK. Wyniki uporzšdkować malejšco wg daty przystšpienia do stadka.
 SELECT
   K1.imie "Imie",
   K1.w_stadku_od "Poluje od"
@@ -21,8 +20,8 @@ WHERE K2.imie = 'JACEK' AND K1.w_stadku_od < K2.w_stadku_od
 ORDER BY K1.w_stadku_od DESC;
   
 --Zad19
---Dla kotów pełnišcych funkcję KOT i MILUSIA wywietlić w kolejnoci hierarchii imiona wszystkich ich szefów. Zadanie rozwišzać na trzy sposoby:
---a.	z wykorzystaniem tylko złšczeń,
+--Dla kotów pełnicych funkcję KOT i MILUSIA wy?wietlić w kolejno?ci hierarchii imiona wszystkich ich szefów. Zadanie rozwizać na trzy sposoby:
+--a.	z wykorzystaniem tylko złczeń,
 --b.	z wykorzystaniem drzewa i operatora CONNECT_BY_ROOT,
 --c.	z wykorzystaniem drzewa i funkcji SYS_CONNECT_BY_PATH.
 
@@ -46,8 +45,8 @@ WHERE K1.funkcja IN ('KOT','MILUSIA');
   
   
 --Zad20
---Wyświetlić imiona wszystkich kotek, które uczestniczyły w incydentach po 01.01.2007. 
---Dodatkowo wyświetlić nazwy band do których należą kotki, imiona ich wrogów wraz ze stopniem wrogości oraz datę incydentu.
+--Wywietlić imiona wszystkich kotek, które uczestniczyły w incydentach po 01.01.2007. 
+--Dodatkowo wywietlić nazwy band do których należš kotki, imiona ich wrogów wraz ze stopniem wrogoci oraz datę incydentu.
 SELECT 
   K1.imie "Imie kotki",
   B.nazwa "Nazwa bandy",
@@ -63,7 +62,7 @@ ORDER BY K1.imie;
 
 
 --Zad21
---Określić ile kotów w każdej z band posiada wrogów
+--Okrelić ile kotów w każdej z band posiada wrogów
 SELECT
   B.nazwa "Nazwa bandy",
   NVL(COUNT(DISTINCT K.pseudo),'0') "Koty z wrogrami"    --DISTINCT bo niektore koty maja kilku wrogow
@@ -73,9 +72,115 @@ FROM
 GROUP BY B.nazwa;
 
 --Zad22
+--Znaleć koty (wraz z pełnionš funkcjš), które posiadajš więcej niż jednego wroga.
+SELECT 
+  MAX(K.funkcja) "Funkcja", --max/min
+  K.pseudo "Pseudonim kota",
+  COUNT(WK.pseudo) "Liczba wrogow"
+FROM Kocury K JOIN Wrogowie_Kocurow WK ON K.pseudo = WK.pseudo
+GROUP BY K.pseudo
+HAVING COUNT(K.pseudo) > 1;
+
+--Zad23
+--Wywietlić imiona kotów, które dostajš myszš premię wraz z ich całkowitym rocznym spożyciem myszy.
+--Dodatkowo jeli ich roczna dawka myszy przekracza 864 wywietlić tekst powyzej 864, jeli jest równa 864 tekst 864, 
+--jeli jest mniejsza od 864 tekst poniżej 864. Wyniki uporzšdkować malejšco wg rocznej dawki myszy. 
+--Do rozwišzania wykorzystać operator zbiorowy UNION.
+
+--zbior dziele na 3 grupy, zgodnie z zadaniem i UNION na kaz
+SELECT
+  imie "Imie",
+  (NVL(Kocury.przydzial_myszy, 0) + NVL(Kocury.myszy_extra, 0))*12 "Dawka Roczna",
+  'powyzej 864' "Dawka"
+FROM Kocury
+WHERE (NVL(Kocury.przydzial_myszy, 0) + NVL(Kocury.myszy_extra, 0))*12  > 864 
+UNION
+SELECT
+  imie "Imie",
+  (NVL(Kocury.przydzial_myszy, 0) + NVL(Kocury.myszy_extra, 0))*12 "Dawka Roczna",
+  'ponizej 864' "Dawka"
+FROM Kocury
+WHERE (NVL(Kocury.przydzial_myszy, 0) + NVL(Kocury.myszy_extra, 0))*12  < 864 
+UNION
+SELECT
+  imie "Imie",
+  (NVL(Kocury.przydzial_myszy, 0) + NVL(Kocury.myszy_extra, 0))*12 "Dawka Roczna",
+  '864' "Dawka"
+FROM Kocury
+WHERE (NVL(Kocury.przydzial_myszy, 0) + NVL(Kocury.myszy_extra, 0))*12  = 864
+ORDER BY "Dawka Roczna" DESC;
+
+--Zad24
+--Znaleć bandy, które nie posiadajš członków. Wywietlić ich numery, nazwy i tereny operowania. 
+--Zadanie rozwišzać na dwa sposoby: bez podzapytań i operatorów zbiorowych oraz wykorzystujšc operatory zbiorowe.
+
+--bez podzapytan i operatorow zbiorowych
+SELECT 
+  B.nr_bandy "Numer bandy",
+  B.nazwa "Nazwa",
+  B.teren "Teren"
+FROM Bandy B LEFT JOIN Kocury K ON B.nr_bandy = K.nr_bandy
+WHERE K.nr_bandy IS NULL;
+
+--z podzapytaniem i operatorem zbiorowym
+SELECT 
+  B.nr_bandy "Numer bandy",
+  B.nazwa "Nazwa",
+  B.teren "Teren"
+FROM Bandy B
+WHERE (
+  SELECT COUNT(K.pseudo) FROM Kocury K
+  WHERE K.nr_bandy = B.nr_bandy
+  )=0; --licze koty, gdzie nr_bandy jest taki sam jak obecnej. I to musi byc = 0;
+  
+--Zad 25
+--Znaleć koty, których przydział myszy jest nie mniejszy 
+--od potrojonego najwyższego przydziału sporód przydziałów wszystkich MILU operujšcych w SADZIE. 
+--Nie stosować funkcji MAX.
+SELECT
+  K1.imie "Imie",
+  K1.funkcja "Funkcja",
+  K1.przydzial_myszy "Przydzial myszy"
+FROM Kocury K1 
+WHERE K1.przydzial_myszy >= 3* (SELECT przydzial_myszy --rownie dobrze mogloby tu byc SELECT *
+                                FROM      (
+                                          SELECT przydzial_myszy
+                                          FROM Kocury K2 JOIN Bandy B ON K2.nr_bandy = B.nr_bandy
+                                          WHERE K2.funkcja = 'MILUSIA' AND B.teren IN ('SAD','CALOSC')
+                                          )
+                                WHERE ROWNUM = 1) --wybieram pierwszy wiersz z przydzialow MILUS z terenu SAD
+ORDER BY przydzial_myszy;
+
+--Zad26
+--Znaleć funkcje (pomijajšc SZEFUNIA), 
+--z którymi zwišzany jest najwyższy i najniższy redni całkowity przydział myszy.
+--Nie używać operatorów zbiorowych (UNION, INTERSECT, MINUS).
+SELECT
+  K1.funkcja "Funkcja",
+  ROUND(AVG(NVL(K1.przydzial_myszy,0)+NVL(K1.myszy_extra,0)))"Srednio najw. i najm. myszy"
+FROM Kocury K1
+WHERE K1.funkcja <> 'SZEFUNIO'
+GROUP BY K1.funkcja
+HAVING(ROUND(AVG(NVL(K1.przydzial_myszy,0)+NVL(K1.myszy_extra,0))))
+IN (
+    (SELECT MAX(przydzial_sredni)
+    FROM(
+          SELECT ROUND(AVG(NVL(K2.przydzial_myszy,0)+NVL(K2.myszy_extra,0)) ) przydzial_sredni
+          FROM Kocury K2
+          WHERE K2.funkcja <> 'SZEFUNIO'
+          GROUP BY K2.funkcja
+        )
+    ),
+    ( 
+    SELECT MIN(przydzial_sredni)
+    FROM(
+          SELECT ROUND(AVG(NVL(K3.przydzial_myszy,0)+NVL(K3.myszy_extra,0)) ) przydzial_sredni
+          FROM Kocury K3
+          WHERE K3.funkcja <> 'SZEFUNIO'
+          GROUP BY K3.funkcja
+        )
+    )
+);
 
 
 
-
-
-      
