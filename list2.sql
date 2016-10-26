@@ -62,5 +62,20 @@ WHERE K1.Plec='D'AND WK.data_incydentu > '2007-01-01'
 ORDER BY K1.imie;
 
 
+--Zad21
+--Określić ile kotów w każdej z band posiada wrogów
+SELECT
+  B.nazwa "Nazwa bandy",
+  NVL(COUNT(DISTINCT K.pseudo),'0') "Koty z wrogrami"    --DISTINCT bo niektore koty maja kilku wrogow
+FROM
+  Kocury K RIGHT JOIN Bandy B ON K.nr_bandy = B.nr_bandy --moglyby byc bandy bez wrogow
+  JOIN Wrogowie_Kocurow WK ON WK.pseudo = K.pseudo
+GROUP BY B.nazwa;
+
+--Zad22
+
+
+
+
 
       
