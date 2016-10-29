@@ -182,5 +182,137 @@ IN (
     )
 );
 
+--Zad27
+--Znaleć koty zajmujšce pierwszych n miejsc pod względem całkowitej liczby spożywanych myszy 
+--(koty o tym samym spożyciu zajmujš to samo miejsce!). 
+--Zadanie rozwišzać na trzy sposoby:
+--a.	wykorzystujšc podzapytanie skorelowane,
+--b.	wykorzystujšc pseudokolumnę ROWNUM,
+--c.	wykorzystujšc łšczenie relacji Kocury z relacjš Kocury.
+
+--a
+--???
+
+--b
+SELECT 
+  pseudo "Pseudo",
+  NVL(przydzial_myszy,0) + NVL(myszy_extra,0) "Zjada"
+FROM Kocury K 
+WHERE NVL(przydzial_myszy,0) + NVL(myszy_extra,0) IN --sprawdzam czy taka wartosc "zjada" znajduje sie w zbiorze pierwszych 6 wartosci "zjada"
+    (SELECT *  --wybierz pierwsze 6 wartosci "zjada"
+    FROM (
+          SELECT DISTINCT NVL(przydzial_myszy,0) + NVL(myszy_extra,0) zjada --wybierz wszystkie "zjada" bez powtorzen
+          FROM Kocury
+          ORDER BY zjada DESC
+          )
+    WHERE ROWNUM <= 6
+    );
+
+--c
+--????
+
+--Zad28
+--Okrelić lata, dla których liczba wstšpień do stada jest najbliższa (od góry i od dołu) 
+--redniej liczbie wstšpień  dla wszystkich lat (rednia z wartoci okrelajšcych liczbę wstšpień w poszczególnych latach). 
+--Nie stosować perspektywy.
+SELECT 
+      'Srednia' "Rok",
+      ROUND(AVG(COUNT(pseudo)),7) "Liczba wstapien"
+FROM Kocury
+GROUP BY EXTRACT(YEAR FROM w_stadku_od)
+UNION ALL
+SELECT 
+  TO_CHAR(EXTRACT(YEAR FROM w_stadku_od)) "Rok",
+  COUNT(pseudo) "Liczba wstapien"
+FROM Kocury
+GROUP BY EXTRACT(YEAR FROM w_stadku_od)
+HAVING (
+        COUNT(pseudo) = (SELECT * FROM  --wybierz jedna grupe, ktorej liczna wstapien byla najblizsza sredniej calkowitej
+                              (
+                              SELECT COUNT (pseudo) --wybierz grupy majace srednia liczbe wstapien mniejsza od sredniej calkowitej
+                              FROM Kocury
+                              GROUP BY EXTRACT(YEAR FROM w_stadku_od)
+                              HAVING COUNT (pseudo) <= (SELECT ROUND(AVG(COUNT(pseudo)),7) FROM Kocury GROUP BY EXTRACT(YEAR FROM w_stadku_od))
+                              ORDER BY COUNT (pseudo) DESC                                           
+                              )
+                        WHERE ROWNUM = 1)
+        )
+UNION ALL
+SELECT 
+  TO_CHAR(EXTRACT(YEAR FROM w_stadku_od)) "Rok",
+  COUNT(pseudo) "Liczba wstapien"
+FROM Kocury
+GROUP BY EXTRACT(YEAR FROM w_stadku_od)
+HAVING (
+        COUNT(pseudo) = (SELECT * FROM  --wybierz jedna grupe, ktorej liczna wstapien byla najblizsza sredniej calkowitej
+                              (
+                              SELECT COUNT (pseudo) --wybierz grupy majace srednia liczbe wstapien mniejsza od sredniej calkowitej
+                              FROM Kocury
+                              GROUP BY EXTRACT(YEAR FROM w_stadku_od)
+                              HAVING COUNT (pseudo) >= (SELECT ROUND(AVG(COUNT(pseudo)),7) FROM Kocury GROUP BY EXTRACT(YEAR FROM w_stadku_od))
+                              ORDER BY COUNT (pseudo) ASC                                           
+                              )
+                        WHERE ROWNUM = 1)
+        );
+        
+--Zad29
+--Dla kocurów (płeć męska), dla których całkowity przydział myszy nie przekracza redniej w ich bandzie wyznaczyć następujšce dane:
+--imię, całkowite spożycie myszy, numer bandy, rednie całkowite spożycie w bandzie. 
+--Nie stosować perspektywy. Zadanie rozwišzać na trzy sposoby:
+--a.	ze złšczeniem ale bez podzapytań,
+--b.	ze złšczenie i z jedynym podzapytaniem w klauzurze FROM,
+--c.	bez złšczeń i z dwoma podzapytaniami: w klauzurach SELECT i WHERE.
+
+--a
+SELECT
+  K1.imie "Imie",
+  MAX(NVL(K1.przydzial_myszy,0) + NVL(K1.myszy_extra,0)) "Zjada",
+  MAX(K1.nr_bandy) "Nr bandy",
+  AVG(NVL(K2.przydzial_myszy,0) + NVL(K2.myszy_extra,0)) "Srednia bandy"
+FROM Kocury K1 JOIN Kocury K2 ON K1.nr_bandy = K2.nr_bandy
+WHERE K1.plec='M'
+GROUP BY K1.imie
+HAVING MAX(NVL(K1.przydzial_myszy,0) + NVL(K1.myszy_extra,0)) <= AVG(NVL(K2.przydzial_myszy,0) + NVL(K2.myszy_extra,0));
+
+--b
+SELECT
+  K.imie "Imie",
+  NVL(K.przydzial_myszy,0) + NVL(K.myszy_extra,0) "Zjada",
+  K.nr_bandy "Nr bandy",
+  TO_CHAR(srednia,'99.99') "Srednia bandy"
+FROM Kocury K JOIN(
+                    SELECT --tabela ze srednia i numerem dla kazdej bandy
+                      AVG(NVL(K2.przydzial_myszy,0) + NVL(K2.myszy_extra,0)) srednia,
+                      nr_bandy banda
+                    FROM Kocury K2
+                    GROUP BY K2.nr_bandy
+                  )
+              ON K.nr_bandy = banda
+WHERE NVL(K.przydzial_myszy,0) + NVL(K.myszy_extra,0) < srednia AND plec='M'
+ORDER BY K.nr_bandy DESC;
+  
+--c
+SELECT
+  K.imie "Imie",
+  NVL(K.przydzial_myszy,0) + NVL(K.myszy_extra,0) "Zjada",
+  K.nr_bandy "Nr bandy",
+  (SELECT --srednia dla konkretnej bandy
+      AVG(NVL(K2.przydzial_myszy,0) + NVL(K2.myszy_extra,0))
+    FROM Kocury K2
+    GROUP BY K2.nr_bandy
+    HAVING K2.nr_bandy = K.nr_bandy
+  ) "Srednia bandy"
+FROM Kocury K
+WHERE NVL(K.przydzial_myszy,0) + NVL(K.myszy_extra,0) < (SELECT --srednia dla konkretnej bandy
+                                                          AVG(NVL(K2.przydzial_myszy,0) + NVL(K2.myszy_extra,0))
+                                                          FROM Kocury K2
+                                                          GROUP BY K2.nr_bandy
+                                                          HAVING K2.nr_bandy = K.nr_bandy
+                                                        )
+                                                        AND plec='M';
+
+
+
+
 
 
